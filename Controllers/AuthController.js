@@ -1,4 +1,4 @@
-const User = require('Models/UserModel.js');
+const User = require('../Models/UserModel.js');
 const JWT = require('jsonwebtoken');
 const BCrypt = require('bcrypt');
 const AuthController = {
@@ -11,19 +11,17 @@ const AuthController = {
         const TempGender = Gender;
         const PresentUserName = await User.findOne({UserName : TempUserName});
         //Checking if username is present
-        if(PresentUserName)
+        console.log(PresentUserName);
+        if(PresentUserName != null)
         {
+            console.log('Here 1')
             res.status(400).send('User Already Present');
-        }//Checking if email is present
-        const EmailPresent = await User.findOne({Email : TempEmail});
-        if(EmailPresent)
-        {
-            res.status(400).send('User already present');
-        }
+        }//Checking 
         //Checking if phone number is present
         const PhoneNumberPresent = await User.findOne({PhoneNumber : TempPhoneNumber});
-        if(PhoneNumberPresent)
+        if(PhoneNumberPresent != null)
         {
+            console.log('Here 3')
             res.status(400).send('User already present');
         }
         //Hashing the password
@@ -59,15 +57,57 @@ const AuthController = {
         {
             res.status(400).json({'message' : 'Passwords do not match'})
         }
-        const
+        const TempAccessToken = CreateAccessToken({id : UserIsPresent._id})
+        const TempRefreshToken = CreateRefreshToken({id : UserIsPresent._id})
+        res.cookie('RefreshToken',TempRefreshToken,{
+            httpOnly : true,
+            path : '/api/RefreshToken',
+            maxAge : 30*24*60*60*1000
+        })
+        res.json({
+            message : "Login Successful",
+            TempAccessToken,
+            User : {
+                ...UserIsPresent._doc,
+                Password : ''
+            }
+        })
+    },
+    LogOut : async(req,res) => {
+        try{
+            res.clearCookie('RefreshToken',{path : '/api/RefreshToken'})
+            return res.json({message : "Logged Out!"})
+        }
+        catch(err){
+            return res.status(500).json({message : err.message})
+        }
+    },
+    //Isska kuch toh scene haiiiiii
+    GenerateAccessToken : async(req,res) => {
+        const RefreshTokenTemp = req.cookies.RefreshToken;
+        if(!RefreshToken)
+        {
+            return res.status(400).json({message : "Please login"});
+            JWT.verify(RefreshTokenTemp,'12345',async(err,result) => {
+                if (err) return res.status(400).json({message : err.message});
+                const TempUser = await User.findById(result.id);
+                if(!TempUser) return res.status(400).json({message : "Doesnt exist"});
+                const TempAccessToken = CreateAccessToken({id : result.id});
+                res.json({
+                    AccessToken,
+                    TempUser
+                })
+            })
+        }
     }
     
 }
 //References  :  https://www.section.io/engineering-education/how-to-build-authentication-api-with-jwt-token-in-nodejs/
 const CreateAccessToken = (Data) => {
-    return JWT.sign(Data,process.env.ACCESS_SECRET_TOKEN, {expiresIn : '1d'});
+    return JWT.sign(Data,'12345', {expiresIn : '1d'});
 }
 //References  : https://www.izertis.com/en/-/refresh-token-with-jwt-authentication-in-node-js#:~:text=For%20the%20refresh%20token%2C%20we,a%20limited%20period%20of%20time).
 const CreateRefreshToken = (Data) => {
-    return JWT.sign(Data,process.env.REFRESH_SECRET_TOKEN, {expiresIn : '30d'})
+    return JWT.sign(Data,'12345', {expiresIn : '30d'})
 }
+module.exports = AuthController;

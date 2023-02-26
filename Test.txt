@@ -1,0 +1,13 @@
+{
+  "Name" : "Vinayak",
+  "UserName" : "Vinayak123",
+  "PhoneNumber" : "8369867268",
+  "Email" : "vinayakpatkar42@gmail.com",
+  "Gender" : "Male",
+  "Password" : "Vinayak1234"
+}
+{
+  
+  "Email" : "vinayakpatkar42@gmail.com",
+  "Password" : "Vinayak1234"
+}
